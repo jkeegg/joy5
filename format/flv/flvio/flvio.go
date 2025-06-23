@@ -82,7 +82,26 @@ const (
 	FRAME_INTER = 2
 
 	VIDEO_H264 = 7
-	VIDEO_H265 = 12
+	VIDEO_H265 = 12 // 业界约定的 H.265/HEVC FLV CodecID
+)
+
+const (
+	SequenceStart        = 0
+	CodedFrames          = 1
+	SequenceEnd          = 2
+	CodedFramesX         = 3
+	Metadata             = 4
+	MPEG2TSSequenceStart = 5
+	Multitrack           = 6
+	ModEx                = 7
+)
+
+const (
+	vp08 = "vp08"
+	vp09 = "vp09"
+	av01 = "av01"
+	avc1 = "avc1"
+	hvc1 = "hvc1"
 )
 
 type Tag struct {
@@ -260,19 +279,76 @@ func (t *Tag) parseVideoHeader(b []byte) (n int, err error) {
 	if flags, err = pio.ReadU8(b, &n); err != nil {
 		return
 	}
-	t.FrameType = flags >> 4
-	t.VideoFormat = flags & 0xf
 
-	switch t.VideoFormat {
-	case VIDEO_H264, VIDEO_H265:
-		if t.AVCPacketType, err = pio.ReadU8(b, &n); err != nil {
-			return
+	isEnhancedRtmp := flags>>7 != 0
+	t.FrameType = flags >> 4 & 0x7
+
+	var videoPacketType byte
+	if isEnhancedRtmp {
+		videoPacketType = flags & 0xf
+		if videoPacketType == ModEx {
+			fmt.Println("Got ModEx")
 		}
-		var v int32
-		if v, err = pio.ReadI24BE(b, &n); err != nil {
-			return
+		if videoPacketType != Metadata && t.FrameType == 5 {
+			fmt.Println("Got video Command")
+		} else if videoPacketType == Multitrack {
+			fmt.Println("Got multitrack")
+			// } else if videoPacketType == 4 {
+			// 	fmt.Println("Got metadata")
+		} else {
+			var videoFourCC string
+			videoFourCC, err = pio.ReadString(b, &n, 4)
+			if err != nil {
+				return
+			}
+			switch videoFourCC {
+			case avc1:
+				t.VideoFormat = VIDEO_H264
+			case hvc1:
+				t.VideoFormat = VIDEO_H265
+			default:
+				fmt.Println("videoFourCC: ", videoFourCC)
+			}
 		}
-		t.CTime = v
+
+		switch t.VideoFormat {
+		case VIDEO_H264, VIDEO_H265:
+			switch videoPacketType {
+			case SequenceStart:
+				// body contains a configuration record to start the sequence.
+				// See ISO/IEC 14496-15:2022, 8.3.3.2 for the description of
+				// the HEVCDecoderConfigurationRecord.
+				t.AVCPacketType = 0
+			case CodedFrames:
+				t.AVCPacketType = 1
+				var v int32
+				if v, err = pio.ReadI24BE(b, &n); err != nil {
+					return
+				}
+				t.CTime = v
+			case SequenceEnd:
+				t.AVCPacketType = 2
+			case CodedFramesX:
+				t.AVCPacketType = 1
+			default:
+				t.AVCPacketType = 1 // ？？？
+				fmt.Println("videoPacketType ", videoPacketType)
+			}
+		}
+	} else {
+		t.VideoFormat = flags & 0xf
+
+		switch t.VideoFormat {
+		case VIDEO_H264, VIDEO_H265:
+			if t.AVCPacketType, err = pio.ReadU8(b, &n); err != nil {
+				return
+			}
+			var v int32
+			if v, err = pio.ReadI24BE(b, &n); err != nil {
+				return
+			}
+			t.CTime = v
+		}
 	}
 
 	return
