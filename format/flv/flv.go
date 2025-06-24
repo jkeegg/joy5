@@ -312,6 +312,33 @@ func ReadPacket(readTag func() (flvio.Tag, error)) (pkt av.Packet, err error) {
 					}
 					return
 				}
+			case flvio.VIDEO_VP8:
+				pkt = av.Packet{
+					Type:       av.VP8,
+					Data:       tag.Data,
+					Time:       flvio.TsToTime(int64(tag.Time)),
+					CTime:      flvio.TsToTime(int64(tag.CTime)),
+					IsKeyFrame: tag.FrameType == flvio.FRAME_KEY,
+				}
+				return
+			case flvio.VIDEO_VP9:
+				pkt = av.Packet{
+					Type:       av.VP9,
+					Data:       tag.Data,
+					Time:       flvio.TsToTime(int64(tag.Time)),
+					CTime:      flvio.TsToTime(int64(tag.CTime)),
+					IsKeyFrame: tag.FrameType == flvio.FRAME_KEY,
+				}
+				return
+			case flvio.VIDEO_AV1:
+				pkt = av.Packet{
+					Type:       av.AV1,
+					Data:       tag.Data,
+					Time:       flvio.TsToTime(int64(tag.Time)),
+					CTime:      flvio.TsToTime(int64(tag.CTime)),
+					IsKeyFrame: tag.FrameType == flvio.FRAME_KEY,
+				}
+				return
 			}
 
 		case flvio.TAG_AUDIO:
@@ -332,6 +359,55 @@ func ReadPacket(readTag func() (flvio.Tag, error)) (pkt av.Packet, err error) {
 					}
 					return
 				}
+			case flvio.SOUND_ALAW:
+				pkt = av.Packet{
+					Type: av.G711_ALAW,
+					Data: tag.Data,
+					Time: flvio.TsToTime(int64(tag.Time)),
+				}
+				return
+			case flvio.SOUND_MULAW:
+				pkt = av.Packet{
+					Type: av.G711_MULAW,
+					Data: tag.Data,
+					Time: flvio.TsToTime(int64(tag.Time)),
+				}
+				return
+			case flvio.SOUND_AC3:
+				pkt = av.Packet{
+					Type: av.AC3,
+					Data: tag.Data,
+					Time: flvio.TsToTime(int64(tag.Time)),
+				}
+				return
+			case flvio.SOUND_FLAC:
+				pkt = av.Packet{
+					Type: av.FLAC,
+					Data: tag.Data,
+					Time: flvio.TsToTime(int64(tag.Time)),
+				}
+				return
+			case flvio.SOUND_MP3:
+				pkt = av.Packet{
+					Type: av.MP3,
+					Data: tag.Data,
+					Time: flvio.TsToTime(int64(tag.Time)),
+				}
+				return
+			case flvio.SOUND_OPUS:
+				pkt = av.Packet{
+					Type: av.OPUS,
+					Data: tag.Data,
+					Time: flvio.TsToTime(int64(tag.Time)),
+				}
+				return
+			case flvio.SOUND_EAC3:
+				pkt = av.Packet{
+					Type: av.EAC3,
+					Data: tag.Data,
+					Time: flvio.TsToTime(int64(tag.Time)),
+				}
+				return
 			}
 		}
 	}

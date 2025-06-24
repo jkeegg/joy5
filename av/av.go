@@ -11,24 +11,44 @@ import (
 
 const (
 	H264 = 1 + iota
+	H265
+	VP8
+	VP9
+	AV1
 	AAC
+	G711_ALAW
+	G711_MULAW
+	AC3
+	EAC3
+	FLAC
+	MP3
+	OPUS
 	H264DecoderConfig
 	H264SPSPPSNALU
+	H265DecoderConfig
 	AACDecoderConfig
 	Metadata
-	H265
-	H265DecoderConfig
 )
 
 var PacketTypeString = map[int]string{
 	H264:              "H264",
+	H265:              "H265",
+	VP8:               "VP8",
+	VP9:               "VP9",
+	AV1:               "AV1",
 	AAC:               "AAC",
+	G711_ALAW:         "G711_ALAW",
+	G711_MULAW:        "G711_MULAW",
+	AC3:               "AC3",
+	EAC3:              "EAC3",
+	FLAC:              "FLAC",
+	MP3:               "MP3",
+	OPUS:              "OPUS",
 	H264DecoderConfig: "H264DecoderConfig",
 	H264SPSPPSNALU:    "H264SPSPPSNALU",
+	H265DecoderConfig: "H265DecoderConfig",
 	AACDecoderConfig:  "AACDecoderConfig",
 	Metadata:          "Metadata",
-	H265:              "H265",
-	H265DecoderConfig: "H265DecoderConfig",
 }
 
 type Packet struct {
